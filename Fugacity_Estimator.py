@@ -83,9 +83,9 @@ Hv = compound_data[3]
 Hf = compound_data[4]
 Vl = compound_data[5]
 Tv = compound_data[6]
-Rc = 0.083144
-b = 0.07780 * (Rc * Tc / Pc)
-a = 0.45724 * ((Rc ** 2) * (Tc ** 2) / Pc)
+Rc = 0.08314462618
+b = 0.0777960739 * (Rc * Tc / Pc)
+a = 0.4572355289 * ((Rc ** 2) * (Tc ** 2) / Pc)
 alpha = (1 + (0.37464 + 1.54226 * w - 0.26992 * (w ** 2)) * (1 - (Tin / Tc) ** 0.5)) ** 2
 at = a * alpha
 
@@ -133,23 +133,29 @@ def fugacity(P):
     elif len(Z_roots) == 3:
         fugacity_liquid_guess = fugacity_coefficient(Z_roots[0], A1, B1)
         fugacity_vapor_guess = fugacity_coefficient(Z_roots[2], A1, B1)
-        fugacity_diff = abs(fugacity_liquid_guess - fugacity_vapor_guess)
+        fugacity_diff = float(abs(fugacity_liquid_guess - fugacity_vapor_guess))
 
     return fugacity_liquid_guess, fugacity_vapor_guess, fugacity_diff, A1, B1, Z_roots
 
 estimate = input("Do you want to estimate the equilibrium pressure? (y/n): ")
-if estimate == "y":
-    for i in range(100):
-        fugacity_liquid_guess, fugacity_vapor_guess, fugacity_diff = fugacity(Pguess)
 
-        if fugacity_diff < 1e-6:
-            break
-        else:
-            Pguess = Pguess * fugacity_liquid_guess / fugacity_vapor_guess
+if estimate == "y":
+    fugacity_liquid_guess, fugacity_vapor_guess, fugacity_diff, A1, B1, Z_roots = fugacity(Pguess)
+    if len(Z_roots) == 1:
+        print("Only one root found. Cannot estimate equilibrium pressure.")
+    else:
+        for i in range(100):
+            fugacity_liquid_guess, fugacity_vapor_guess, fugacity_diff, A1, B1, Z_roots = fugacity(Pguess)
+            print(f"Iteration {i+1}:")
+            print(fugacity_diff)
+            if fugacity_diff < 1e-6:
+                break
+            else:
+                Pguess = Pguess * fugacity_liquid_guess / fugacity_vapor_guess
 else:
     fugacity_liquid_guess, fugacity_vapor_guess, fugacity_diff, A1, B1, Z_roots = fugacity(Pguess)
 
-print (f"Equilibrium Pressure: {Pguess} bar")
+print (f"Final Pressure: {Pguess} bar")
 print (f"Fugacity Coefficient of Liquid: {fugacity_liquid_guess}")
 if fugacity_vapor_guess is not None:
     print (f"Fugacity Coefficient of Vapor: {fugacity_vapor_guess}")
@@ -157,4 +163,4 @@ if fugacity_vapor_guess is not None:
 print (f"Fugacity Liquid: {fugacity_liquid_guess * Pguess} bar")
 print("A =", A1)
 print("B =", B1)
-print("Z roots =", Z_roots)
+print("Z roots = Vapor:", Z_roots[0], "Liquid:", Z_roots[-1])
