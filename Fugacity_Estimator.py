@@ -126,20 +126,35 @@ def fugacity(P):
     Z_roots = [root.real for root in Z_roots if np.isreal(root)]
     Z_roots.sort()
 
-    fugacity_liquid_guess = fugacity_coefficient(Z_roots[0], A1, B1)
-    fugacity_vapor_guess = fugacity_coefficient(Z_roots[2], A1, B1)
+    if len(Z_roots) == 1:
+        fugacity_liquid_guess = fugacity_coefficient(Z_roots[0], A1, B1)
+        fugacity_vapor_guess = None
+        fugacity_diff = None
+    elif len(Z_roots) == 3:
+        fugacity_liquid_guess = fugacity_coefficient(Z_roots[0], A1, B1)
+        fugacity_vapor_guess = fugacity_coefficient(Z_roots[2], A1, B1)
+        fugacity_diff = abs(fugacity_liquid_guess - fugacity_vapor_guess)
 
-    fugacity_diff = abs(fugacity_liquid_guess - fugacity_vapor_guess)
-    return fugacity_liquid_guess, fugacity_vapor_guess, fugacity_diff
+    return fugacity_liquid_guess, fugacity_vapor_guess, fugacity_diff, A1, B1, Z_roots
 
-for i in range(100):
-    fugacity_liquid_guess, fugacity_vapor_guess, fugacity_diff = fugacity(Pguess)
+estimate = input("Do you want to estimate the equilibrium pressure? (y/n): ")
+if estimate == "y":
+    for i in range(100):
+        fugacity_liquid_guess, fugacity_vapor_guess, fugacity_diff = fugacity(Pguess)
 
-    if fugacity_diff < 1e-6:
-        break
-    else:
-        Pguess = Pguess * fugacity_liquid_guess / fugacity_vapor_guess
+        if fugacity_diff < 1e-6:
+            break
+        else:
+            Pguess = Pguess * fugacity_liquid_guess / fugacity_vapor_guess
+else:
+    fugacity_liquid_guess, fugacity_vapor_guess, fugacity_diff, A1, B1, Z_roots = fugacity(Pguess)
 
 print (f"Equilibrium Pressure: {Pguess} bar")
 print (f"Fugacity Coefficient of Liquid: {fugacity_liquid_guess}")
-print (f"Fugacity Coefficient of Vapor: {fugacity_vapor_guess}")
+if fugacity_vapor_guess is not None:
+    print (f"Fugacity Coefficient of Vapor: {fugacity_vapor_guess}")
+    print (f"Fugacity Vapor: {fugacity_vapor_guess * Pguess} bar")
+print (f"Fugacity Liquid: {fugacity_liquid_guess * Pguess} bar")
+print("A =", A1)
+print("B =", B1)
+print("Z roots =", Z_roots)
