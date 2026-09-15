@@ -74,7 +74,8 @@ print(f"Enthalpy of Fusion (kJ/mol): {compound_data[4]}")
 print(f"Liquid Molar Volume (cm^3/mol): {compound_data[5]}")
 print(f"Temperature for Volume Data (K): {compound_data[6]}")
 
-Tin = input("Enter the temperature (K): ")
+
+Tin = float(input("Enter the temperature (K): "))
 Tc = compound_data[0]
 Pc = compound_data[1]
 w = compound_data[2]
@@ -82,14 +83,17 @@ Hv = compound_data[3]
 Hf = compound_data[4]
 Vl = compound_data[5]
 Tv = compound_data[6]
-
-Rc = 8.314 * 10 ** -5 # J/(mol*K)
+Rc = 0.083144
 b = 0.07780 * (Rc * Tc / Pc)
 a = 0.45724 * ((Rc ** 2) * (Tc ** 2) / Pc)
 alpha = (1 + (0.37464 + 1.54226 * w - 0.26992 * (w ** 2)) * (1 - (Tin / Tc) ** 0.5)) ** 2
 at = a * alpha
 
-Pguess = Input("Enter the intial pressure (bar) guess: ")
+Pguess = float(input("Enter the intial pressure (bar) guess: "))
+
+fugacity_liquid_guess = 1
+fugacity_vapor_guess = 1
+fugacity_diff = 1
 
 
 
@@ -104,12 +108,19 @@ def coefficients(A, B):
     return list
 
 def fugacity_coefficient(Z, A, B):
-    ln_phi = Z - 1 - np.log(Z - B) - (A / (2 * np.sqrt(2) * B)) * np.log((Z + (1 + np.sqrt(2)) * B) / (Z + (1 - np.sqrt(2)) * B))
-    phi = np.exp(ln_phi)
-    return phi
+    if (Z - B) <= 0:
+        return np.nan
+        
+    num = Z + (1 + np.sqrt(2)) * B
+    den = Z + (1 - np.sqrt(2)) * B
+    if (num / den) <= 0:
+        return np.nan
+
+    ln_phi = Z - 1 - np.log(Z - B) - (A / (2 * np.sqrt(2) * B)) * np.log(num / den)
+    return np.exp(ln_phi)
 
 def fugacity(P):
-    B1 = b - P / (Rc * Tin)
+    B1 = b * P / (Rc * Tin)
     A1 = at * P / ((Rc ** 2) * (Tin ** 2))
     Z_roots = np.roots(coefficients(A1, B1))
     Z_roots = [root.real for root in Z_roots if np.isreal(root)]
@@ -122,7 +133,8 @@ def fugacity(P):
     return fugacity_liquid_guess, fugacity_vapor_guess, fugacity_diff
 
 for i in range(100):
-    fugacity(Pguess)
+    fugacity_liquid_guess, fugacity_vapor_guess, fugacity_diff = fugacity(Pguess)
+
     if fugacity_diff < 1e-6:
         break
     else:
