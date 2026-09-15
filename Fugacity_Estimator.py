@@ -134,6 +134,8 @@ def fugacity(P):
         fugacity_liquid_guess = fugacity_coefficient(Z_roots[0], A1, B1)
         fugacity_vapor_guess = fugacity_coefficient(Z_roots[2], A1, B1)
         fugacity_diff = float(abs(fugacity_liquid_guess - fugacity_vapor_guess))
+    else:
+        print("Unexpected number of roots found. Cannot estimate fugacity.")
 
     return fugacity_liquid_guess, fugacity_vapor_guess, fugacity_diff, A1, B1, Z_roots
 
@@ -146,12 +148,10 @@ if estimate == "y":
     else:
         for i in range(100):
             fugacity_liquid_guess, fugacity_vapor_guess, fugacity_diff, A1, B1, Z_roots = fugacity(Pguess)
-            print(f"Iteration {i+1}:")
-            print(fugacity_diff)
-            if fugacity_diff < 1e-6:
+            if fugacity_diff < 1e-9:
                 break
             else:
-                Pguess = Pguess * fugacity_liquid_guess / fugacity_vapor_guess
+                Pguess = Pguess * (fugacity_liquid_guess / fugacity_vapor_guess)**0.5
 else:
     fugacity_liquid_guess, fugacity_vapor_guess, fugacity_diff, A1, B1, Z_roots = fugacity(Pguess)
 
@@ -163,4 +163,4 @@ if fugacity_vapor_guess is not None:
 print (f"Fugacity Liquid: {fugacity_liquid_guess * Pguess} bar")
 print("A =", A1)
 print("B =", B1)
-print("Z roots = Vapor:", Z_roots[0], "Liquid:", Z_roots[-1])
+print("Z roots = Vapor:", Z_roots[-1], "Liquid:", Z_roots[0])
