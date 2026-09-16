@@ -64,6 +64,7 @@ entry = input("Enter the name of the compound: ")
 compound_data = Data_Table.get(entry)
 if compound_data is None:
     print("Compound not found in the data table.")
+    exit()
 
 print(f"Compound: {entry}")
 print(f"Critical Temperature (K): {compound_data[0]}")
@@ -103,9 +104,9 @@ def coefficients(A, B):
     c3 = A - 3 * (B ** 2) - 2 * B
     c4 = -(A * B - (B ** 2) - (B ** 3))
 
-    list = [c1, c2, c3, c4]
+    coefficients = [c1, c2, c3, c4]
 
-    return list
+    return coefficients
 
 def fugacity_coefficient(Z, A, B):
     if (Z - B) <= 0:
@@ -155,12 +156,16 @@ if estimate == "y":
 else:
     fugacity_liquid_guess, fugacity_vapor_guess, fugacity_diff, A1, B1, Z_roots = fugacity(Pguess)
 
-print (f"Final Pressure: {Pguess} bar")
-print (f"Fugacity Coefficient of Liquid: {fugacity_liquid_guess}")
+print("\n--- Peng-Robinson Results ---")
+print(f"Final Pressure: {Pguess:.5f} bar")
+print(f"Liquid Fugacity Coefficient: {fugacity_liquid_guess:.6f}")
+
 if fugacity_vapor_guess is not None:
-    print (f"Fugacity Coefficient of Vapor: {fugacity_vapor_guess}")
-    print (f"Fugacity Vapor: {fugacity_vapor_guess * Pguess} bar")
-print (f"Fugacity Liquid: {fugacity_liquid_guess * Pguess} bar")
-print("A =", A1)
-print("B =", B1)
-print("Z roots = Vapor:", Z_roots[-1], "Liquid:", Z_roots[0])
+    print(f"Vapor Fugacity Coefficient: {fugacity_vapor_guess:.6f}")
+    print(f"Liquid Fugacity: {fugacity_liquid_guess * Pguess:.5f} bar")
+    print(f"Vapor Fugacity: {fugacity_vapor_guess * Pguess:.5f} bar")
+
+print(f"A = {A1:.6f}")
+print(f"B = {B1:.6f}")
+print(f"Liquid Z = {Z_roots[0]:.6f}")
+print(f"Vapor Z = {Z_roots[-1]:.6f}")
