@@ -1,3 +1,5 @@
+# -- Initial Setup --
+
 import numpy as np
 import math as m
 
@@ -59,13 +61,15 @@ Data_Table = {
     "Oxygen" : [154.58,50.43,0.022,6.82,0.44,27.85,90.00],
 }
 
+# Prompt user for compound & obtain corresponding data from dictionary
 entry = input("Enter the name of the compound: ")
 
+# Failsafe for unknown compounds without data
 compound_data = Data_Table.get(entry)
 if compound_data is None:
-    print("Compound not found in the data table.")
-    exit()
+    raise SystemExit("Compound not found in the data table.")
 
+#Print all data values from dictionary
 print(f"Compound: {entry}")
 print(f"Critical Temperature (K): {compound_data[0]}")
 print(f"Critical Pressure (bar): {compound_data[1]}")
@@ -76,6 +80,7 @@ print(f"Liquid Molar Volume (cm^3/mol): {compound_data[5]}")
 print(f"Temperature for Volume Data (K): {compound_data[6]}")
 
 
+#Prompt used for initial temperature and match variables with data table values for calculation
 Tin = float(input("Enter the temperature (K): "))
 Tc = compound_data[0]
 Pc = compound_data[1]
@@ -84,20 +89,24 @@ Hv = compound_data[3]
 Hf = compound_data[4]
 Vl = compound_data[5]
 Tv = compound_data[6]
-Rc = 0.08314462618
+Rc = 0.08314462618 # Gas Constant in L*bar/mol*k
+
+#Calculate Peng Robinson Variables
 b = 0.0777960739 * (Rc * Tc / Pc)
 a = 0.4572355289 * ((Rc ** 2) * (Tc ** 2) / Pc)
 alpha = (1 + (0.37464 + 1.54226 * w - 0.26992 * (w ** 2)) * (1 - (Tin / Tc) ** 0.5)) ** 2
 at = a * alpha
 
+#Prompt used for initial pressure value
 Pguess = float(input("Enter the intial pressure (bar) guess: "))
 
+#Intitialize fugacity values
 fugacity_liquid_guess = 1
 fugacity_vapor_guess = 1
 fugacity_diff = 1
 
 
-
+#Define function to use compressability equation to find Z roots
 def coefficients(A, B):
     c1 = 1
     c2 = -(1 - B)
@@ -108,10 +117,11 @@ def coefficients(A, B):
 
     return coefficients
 
+#Define function to calculate fugacity coefficients from Z  roots
 def fugacity_coefficient(Z, A, B):
     if (Z - B) <= 0:
         return np.nan
-        
+
     num = Z + (1 + np.sqrt(2)) * B
     den = Z + (1 - np.sqrt(2)) * B
     if (num / den) <= 0:
@@ -120,6 +130,7 @@ def fugacity_coefficient(Z, A, B):
     ln_phi = Z - 1 - np.log(Z - B) - (A / (2 * np.sqrt(2) * B)) * np.log(num / den)
     return np.exp(ln_phi)
 
+#Define function to calculate fugacity using fugacity coefficients
 def fugacity(P):
     B1 = b * P / (Rc * Tin)
     A1 = at * P / ((Rc ** 2) * (Tin ** 2))
@@ -140,8 +151,10 @@ def fugacity(P):
 
     return fugacity_liquid_guess, fugacity_vapor_guess, fugacity_diff, A1, B1, Z_roots
 
+#Prompt user to decide whether to estimate equilibrium point where Fl = Fv or to find fugacity at a certain point instead.
 estimate = input("Do you want to estimate the equilibrium pressure? (y/n): ")
 
+#Equilibrium Calculations
 if estimate == "y":
     fugacity_liquid_guess, fugacity_vapor_guess, fugacity_diff, A1, B1, Z_roots = fugacity(Pguess)
     if len(Z_roots) == 1:
@@ -153,9 +166,11 @@ if estimate == "y":
                 break
             else:
                 Pguess = Pguess * (fugacity_liquid_guess / fugacity_vapor_guess)**0.5
+#Point Calculations
 else:
     fugacity_liquid_guess, fugacity_vapor_guess, fugacity_diff, A1, B1, Z_roots = fugacity(Pguess)
 
+#Print all results
 print("\n--- Peng-Robinson Results ---")
 print(f"Final Pressure: {Pguess:.5f} bar")
 print(f"Liquid Fugacity Coefficient: {fugacity_liquid_guess:.6f}")
@@ -165,7 +180,5 @@ if fugacity_vapor_guess is not None:
     print(f"Liquid Fugacity: {fugacity_liquid_guess * Pguess:.5f} bar")
     print(f"Vapor Fugacity: {fugacity_vapor_guess * Pguess:.5f} bar")
 
-print(f"A = {A1:.6f}")
-print(f"B = {B1:.6f}")
 print(f"Liquid Z = {Z_roots[0]:.6f}")
 print(f"Vapor Z = {Z_roots[-1]:.6f}")
