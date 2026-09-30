@@ -8,14 +8,14 @@ This project implements a computational workflow for analyzing real-fluid behavi
 
 The program allows the user to:
 
-Select a compound from a built-in thermodynamic property database
-Enter a temperature and initial pressure guess
-Calculate Peng-Robinson EOS parameters
-Solve the cubic EOS for compressibility factor (`Z`) roots
-Calculate liquid and vapor fugacity coefficients
-Calculate liquid and vapor fugacity
-Estimate equilibrium pressure by iterating toward equal liquid and vapor fugacity
-Add additional compounds to the thermodynamic property database
+- Select a compound from a built-in thermodynamic property database
+- Enter a temperature and initial pressure guess
+- Calculate Peng-Robinson EOS parameters
+- Solve the cubic EOS for compressibility factor (`Z`) roots
+- Calculate liquid and vapor fugacity coefficients
+- Calculate liquid and vapor fugacity
+- Estimate equilibrium pressure by iterating toward equal liquid and vapor fugacity
+- Add additional compounds to the thermodynamic property database
 
 Thermodynamic Model
 
